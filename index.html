@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -36,10 +37,10 @@
     <!-- Navigation Tabs -->
     <div class="flex bg-white shadow-sm z-10">
         <button id="tab-camera" class="flex-1 py-3 text-center tab-active transition-colors" onclick="switchTab('camera')">
-            <i class="fas fa-camera mr-1"></i> Kiểm Duyệt
+            <i class="fas fa-camera mr-1"></i> Chụp Ảnh
         </button>
         <button id="tab-dashboard" class="flex-1 py-3 text-center tab-inactive transition-colors" onclick="switchTab('dashboard')">
-            <i class="fas fa-chart-line mr-1"></i> Bảng Tin Realtime
+            <i class="fas fa-chart-line mr-1"></i> Bảng Tin
         </button>
     </div>
 
@@ -52,32 +53,46 @@
             <!-- Camera Viewfinder -->
             <div class="relative flex-1 bg-black rounded-xl overflow-hidden shadow-inner mb-4 flex items-center justify-center">
                 <video id="video-preview" class="absolute inset-0 w-full h-full hidden" autoplay playsinline></video>
-                <div id="camera-placeholder" class="text-gray-400 text-center">
+                <div id="camera-placeholder" class="text-gray-400 text-center px-4 w-full">
                     <i class="fas fa-camera text-4xl mb-2"></i>
                     <p>Nhấn "Mở Camera" để bắt đầu</p>
                 </div>
                 
-                <!-- Overlay Loading lúc gửi AI -->
-                <div id="ai-loading-overlay" class="absolute inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center hidden z-20">
+                <!-- Overlay Loading lúc gửi AI / Lưu -->
+                <div id="ai-loading-overlay" class="absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center hidden z-20">
                     <div class="loader w-12 h-12 mb-3"></div>
-                    <p class="text-white font-semibold">AI Đang phân tích thực phẩm...</p>
-                    <p class="text-gray-300 text-sm">Vui lòng giữ kết nối</p>
+                    <p id="loading-text" class="text-white font-semibold">Đang xử lý...</p>
+                    <p class="text-gray-300 text-sm mt-1">Vui lòng đợi trong giây lát</p>
                 </div>
             </div>
 
             <!-- Nút điều khiển -->
             <div class="flex flex-col gap-3">
-                <button id="btn-start-camera" class="bg-gray-800 text-white py-3 rounded-lg font-bold shadow-md active:bg-gray-700 transition">
+                <button id="btn-start-camera" class="bg-gray-800 text-white py-3 rounded-lg font-bold shadow-md active:bg-gray-700 transition w-full">
                     <i class="fas fa-video mr-2"></i> Mở Camera
                 </button>
-                <button id="btn-capture" class="bg-blue-600 text-white py-4 rounded-lg font-bold shadow-lg active:bg-blue-700 transition hidden text-lg">
-                    <i class="fas fa-crosshairs mr-2"></i> Chụp & Kiểm Duyệt Tự Động
-                </button>
+
+                <!-- Khu vực điều khiển khi bật camera -->
+                <div id="capture-controls" class="hidden flex-col gap-3 w-full">
+                    
+                    <!-- Toggle Switch AI -->
+                    <label class="flex items-center justify-between cursor-pointer bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                        <span class="text-sm font-medium text-gray-800"><i class="fas fa-robot text-blue-500 mr-2"></i>Dùng AI phân tích thực phẩm</span>
+                        <div class="relative">
+                            <input type="checkbox" id="ai-toggle" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </div>
+                    </label>
+
+                    <button id="btn-capture" class="bg-blue-600 text-white py-4 rounded-lg font-bold shadow-lg active:bg-blue-700 transition text-lg w-full">
+                        <i class="fas fa-camera mr-2"></i> Chụp Ảnh
+                    </button>
+                </div>
             </div>
 
             <!-- GPS Info -->
             <div class="mt-3 text-xs text-gray-500 text-center" id="gps-status">
-                <i class="fas fa-location-dot"></i> Đang lấy vị trí GPS để đóng dấu...
+                <i class="fas fa-location-dot"></i> Đang chờ tín hiệu GPS...
             </div>
             
             <!-- Ẩn Canvas dùng để xử lý ảnh -->
@@ -88,8 +103,8 @@
         <section id="section-dashboard" class="hidden p-4 min-h-full bg-gray-100">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="font-bold text-gray-700">Lịch sử hôm nay</h2>
-                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded border border-blue-200">
-                    <i class="fas fa-sync fa-spin mr-1"></i> Live
+                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded border border-blue-200 flex items-center">
+                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse mr-1.5"></div> Live
                 </span>
             </div>
             
@@ -109,7 +124,7 @@
         import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-ai.js";
 
         // --- CẤU HÌNH HỆ THỐNG ---
-        const firebaseConfig = {
+        let firebaseConfig = {
             apiKey: "AIzaSyAtoX3PysX692bNg6nA55Qriv5P-7phmFQ",
             authDomain: "aiminh-d96d4.firebaseapp.com",
             projectId: "aiminh-d96d4",
@@ -118,7 +133,9 @@
             appId: "1:159603803322:web:3693589412fca5c3456e83"
         };
         
-        const appId = 'food-inspection-app';
+        // Cấu trúc Collection ID
+        const appId = 'food-inspection-app'; 
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -128,9 +145,8 @@
         let aiModel;
         try {
             const ai = getAI(app, { backend: new GoogleAIBackend() });
-            // Dùng gemini-2.5-flash để hỗ trợ phân tích hình ảnh (Multimodal) tốt nhất
             aiModel = getGenerativeModel(ai, { 
-                model: "gemini-3.1-flash-lite-preview",
+                model: "gemini-2.5-flash",
                 generationConfig: { responseMimeType: "application/json" }
             });
             console.log("Firebase AI Model initialized!");
@@ -147,20 +163,23 @@
         const videoPreview = document.getElementById('video-preview');
         const cameraPlaceholder = document.getElementById('camera-placeholder');
         const btnStartCamera = document.getElementById('btn-start-camera');
+        const captureControls = document.getElementById('capture-controls');
         const btnCapture = document.getElementById('btn-capture');
+        const aiToggle = document.getElementById('ai-toggle');
         const canvas = document.getElementById('capture-canvas');
         const aiLoadingOverlay = document.getElementById('ai-loading-overlay');
+        const loadingText = document.getElementById('loading-text');
         const gpsStatus = document.getElementById('gps-status');
         const dashboardList = document.getElementById('dashboard-list');
 
-        // --- 1. XÁC THỰC FIREBASE (Bắt buộc trước khi thao tác DB) ---
+        // --- 1. XÁC THỰC FIREBASE ---
         async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     try {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } catch (customTokenError) {
-                        console.warn("Lỗi token môi trường (do dùng cấu hình DB riêng), đang chuyển sang đăng nhập ẩn danh...", customTokenError);
+                        console.warn("Lỗi token môi trường, chuyển sang đăng nhập ẩn danh...");
                         await signInAnonymously(auth);
                     }
                 } else {
@@ -175,7 +194,7 @@
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
-                document.getElementById('user-info').innerText = `Người trực: Phụ huynh/Y tế`;
+                document.getElementById('user-info').innerText = `Người trực: ID-${user.uid.substring(0,4)}`;
                 setupRealtimeListener(); // Bật lắng nghe dữ liệu khi đã login
             }
         });
@@ -191,8 +210,10 @@
                 videoPreview.classList.remove('hidden');
                 cameraPlaceholder.classList.add('hidden');
                 
+                // Đổi UI sang chế độ chụp
                 btnStartCamera.classList.add('hidden');
-                btnCapture.classList.remove('hidden');
+                captureControls.classList.remove('hidden');
+                captureControls.classList.add('flex');
 
                 // Lấy GPS ngay khi mở camera
                 navigator.geolocation.getCurrentPosition(
@@ -202,32 +223,24 @@
                         gpsStatus.innerHTML = `<i class="fas fa-location-dot text-green-500"></i> GPS: ${currentLat}, ${currentLon}`;
                     },
                     (err) => {
-                        gpsStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-yellow-500"></i> Không lấy được GPS (Dùng địa điểm mặc định)`;
+                        gpsStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-yellow-500"></i> Không lấy được GPS (Dùng mặc định)`;
                     }
                 );
             } catch (err) {
                 console.error(err);
-                
-                // Thay thế alert() bằng UI trực quan
-                const cameraPlaceholder = document.getElementById('camera-placeholder');
                 cameraPlaceholder.innerHTML = `
-                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
-                        <i class="fas fa-video-slash text-4xl mb-2 text-red-500"></i>
-                        <p class="text-red-700 font-bold mb-2">Lỗi truy cập Camera</p>
-                        <p class="text-sm text-red-600 mb-2">Trình duyệt đang chặn quyền máy ảnh. Nguyên nhân thường gặp:</p>
-                        <ul class="text-left text-sm list-disc pl-6 text-red-600 space-y-1">
-                            <li>Đang mở trực tiếp file (không có HTTPS).</li>
-                            <li>Đang mở trong Zalo/Messenger. Hãy chọn <b>"Mở bằng trình duyệt gốc" (Chrome/Safari)</b>.</li>
-                            <li>Chưa cấp quyền máy ảnh cho trình duyệt.</li>
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg text-left">
+                        <div class="text-center mb-2"><i class="fas fa-video-slash text-4xl text-red-500"></i></div>
+                        <p class="text-red-700 font-bold mb-1">Lỗi truy cập Camera</p>
+                        <p class="text-sm text-red-600 mb-2">Không thể mở máy ảnh. Nguyên nhân thường gặp:</p>
+                        <ul class="text-xs list-disc pl-5 text-red-600 space-y-1">
+                            <li>Ứng dụng đang mở trực tiếp từ file (thiếu HTTPS).</li>
+                            <li>Bạn đang mở link trong Zalo/Messenger. Hãy bấm nút 3 chấm góc trên chọn <b>"Mở bằng trình duyệt"</b> (Chrome/Safari).</li>
+                            <li>Chưa cấp quyền máy ảnh.</li>
                         </ul>
                     </div>
                 `;
-                cameraPlaceholder.classList.remove('hidden');
-                document.getElementById('video-preview').classList.add('hidden');
-                
-                // Đảm bảo nút chụp bị ẩn
-                document.getElementById('btn-start-camera').classList.add('hidden');
-                document.getElementById('btn-capture').classList.add('hidden');
+                btnStartCamera.classList.add('hidden');
             }
         }
 
@@ -238,26 +251,25 @@
             }
             videoPreview.classList.add('hidden');
             cameraPlaceholder.classList.remove('hidden');
+            
             btnStartCamera.classList.remove('hidden');
-            btnCapture.classList.add('hidden');
+            captureControls.classList.add('hidden');
+            captureControls.classList.remove('flex');
         }
 
         // Chụp và đóng dấu Watermark
         function captureAndWatermark() {
             const ctx = canvas.getContext('2d');
-            // Thu nhỏ ảnh để tiết kiệm băng thông & tránh lỗi 1MB của Firestore
             const targetWidth = 800; 
             const scale = targetWidth / videoPreview.videoWidth;
             canvas.width = targetWidth;
             canvas.height = videoPreview.videoHeight * scale;
 
-            // Vẽ frame từ video
             ctx.drawImage(videoPreview, 0, 0, canvas.width, canvas.height);
 
-            // Vẽ Watermark (Chống gian lận)
             const timestampStr = new Date().toLocaleString('vi-VN');
             
-            ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; // Nền đen mờ
+            ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
             ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
             
             ctx.fillStyle = "white";
@@ -266,47 +278,34 @@
             ctx.font = "14px Arial";
             ctx.fillText(`GPS: ${currentLat}, ${currentLon} | Bếp ăn trường học`, 15, canvas.height - 15);
 
-            // Chuyển sang Base64 (chất lượng 0.7 để nén)
-        return canvas.toDataURL('image/jpeg', 0.7);
-    }
+            return canvas.toDataURL('image/jpeg', 0.7);
+        }
 
-    // --- 3. GEMINI AI LOGIC (Dùng Firebase AI SDK) ---
-    async function analyzeWithGemini(base64Image) {
-        if (!aiModel) throw new Error("Mô hình AI chưa được khởi tạo. Hãy kiểm tra lại API Key.");
+        // --- 3. GEMINI AI LOGIC (Dùng Firebase AI SDK) ---
+        async function analyzeWithGemini(base64Image) {
+            if (!aiModel) throw new Error("Mô hình AI chưa được khởi tạo. Hãy kiểm tra lại kết nối mạng.");
 
-        // Cắt bỏ phần header của base64
-        const base64Data = base64Image.split(',')[1];
-        
-        const prompt = `
-            Bạn là một chuyên gia an toàn vệ sinh thực phẩm tại trường học. 
-            Hãy nhìn vào bức ảnh thực phẩm được đưa đến bếp ăn sáng nay.
-            Phân tích và trả về CHỈ MỘT chuỗi JSON hợp lệ theo cấu trúc sau (không có markdown, không có text thừa):
-            {
-                "ten_thuc_pham": "Tên món/nhóm (VD: Thịt lợn, Cải thảo, Sữa tươi)",
-                "danh_gia": "Tươi ngon / Bình thường / Nghi ngờ hỏng / Cận date",
-                "mau_sac_canh_bao": "green" (nếu tốt) hoặc "yellow" (nếu bình thường) hoặc "red" (nếu hỏng/cận date),
-                "chi_tiet": "Mô tả ngắn gọn 1 câu lý do đánh giá"
-            }
-        `;
+            const base64Data = base64Image.split(',')[1];
+            
+            const prompt = `
+                Bạn là chuyên gia an toàn thực phẩm. Nhìn vào ảnh, phân tích và trả về CHỈ MỘT chuỗi JSON:
+                {
+                    "ten_thuc_pham": "Tên món/nhóm (VD: Thịt lợn, Rau cải)",
+                    "danh_gia": "Tươi ngon / Bình thường / Nghi ngờ hỏng",
+                    "mau_sac_canh_bao": "green" (tốt) hoặc "yellow" (bình thường) hoặc "red" (hỏng),
+                    "chi_tiet": "Mô tả ngắn 1 câu lý do"
+                }
+            `;
 
-        // Cấu trúc dữ liệu hình ảnh cho SDK
-        const imagePart = {
-            inlineData: { 
-                mimeType: "image/jpeg", 
-                data: base64Data 
-            }
-        };
+            const imagePart = { inlineData: { mimeType: "image/jpeg", data: base64Data } };
 
-        // Gọi model qua SDK (Thay cho hàm fetch truyền thống)
-        const result = await aiModel.generateContent([prompt, imagePart]);
-        const response = result.response;
-        const textResponse = response.text();
-        
-        return JSON.parse(textResponse);
-    }
+            const result = await aiModel.generateContent([prompt, imagePart]);
+            const response = result.response;
+            return JSON.parse(response.text());
+        }
 
-    // --- 4. FIREBASE REALTIME SYNC ---
-    async function saveToFirestore(base64Image, aiResult) {
+        // --- 4. FIREBASE REALTIME SYNC ---
+        async function saveToFirestore(base64Image, aiResult) {
             if (!currentUser) return;
             
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'inspections');
@@ -315,7 +314,8 @@
                 aiAnalysis: aiResult,
                 timestamp: Date.now(),
                 gps: { lat: currentLat, lon: currentLon },
-                inspector: currentUser.uid.substring(0, 5) // Mock ID người chụp
+                inspector: currentUser.uid,
+                hasAI: aiToggle.checked
             });
         }
 
@@ -328,19 +328,17 @@
                 const docs = [];
                 snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
                 
-                // Sắp xếp trên RAM (Tránh Rule 2: không dùng orderBy phức tạp)
                 docs.sort((a, b) => b.timestamp - a.timestamp);
-                
                 renderDashboard(docs);
             }, (error) => {
                 console.error("Lỗi Realtime:", error);
-                dashboardList.innerHTML = `<div class="text-red-500 text-center">Lỗi tải dữ liệu.</div>`;
+                dashboardList.innerHTML = `<div class="text-red-500 text-center p-4">Lỗi kết nối CSDL Realtime.</div>`;
             });
         }
 
         function renderDashboard(docs) {
             if (docs.length === 0) {
-                dashboardList.innerHTML = `<div class="text-center text-gray-500 py-10"><i class="fas fa-box-open text-3xl mb-2"></i><br>Chưa có lượt kiểm duyệt nào hôm nay.</div>`;
+                dashboardList.innerHTML = `<div class="text-center text-gray-400 py-12"><i class="fas fa-folder-open text-4xl mb-3"></i><br>Chưa có dữ liệu kiểm duyệt hôm nay.</div>`;
                 return;
             }
 
@@ -348,24 +346,29 @@
                 const ai = doc.aiAnalysis || {};
                 const timeStr = new Date(doc.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                 
-                // Set màu badge theo AI đánh giá
-                let badgeClass = "bg-green-100 text-green-800 border-green-200";
-                let icon = "fa-check-circle text-green-600";
-                if (ai.mau_sac_canh_bao === 'red') { badgeClass = "bg-red-100 text-red-800 border-red-200"; icon = "fa-triangle-exclamation text-red-600"; }
-                if (ai.mau_sac_canh_bao === 'yellow') { badgeClass = "bg-yellow-100 text-yellow-800 border-yellow-200"; icon = "fa-circle-exclamation text-yellow-600"; }
+                // Mặc định cho ảnh tư liệu (Không dùng AI)
+                let badgeClass = "bg-gray-100 text-gray-600 border-gray-200";
+                let icon = "fa-image text-gray-500";
+                
+                // Nếu có dùng AI
+                if (doc.hasAI !== false) {
+                    if (ai.mau_sac_canh_bao === 'green') { badgeClass = "bg-green-100 text-green-800 border-green-200"; icon = "fa-check-circle text-green-600"; }
+                    if (ai.mau_sac_canh_bao === 'red') { badgeClass = "bg-red-100 text-red-800 border-red-200"; icon = "fa-triangle-exclamation text-red-600"; }
+                    if (ai.mau_sac_canh_bao === 'yellow') { badgeClass = "bg-yellow-100 text-yellow-800 border-yellow-200"; icon = "fa-circle-exclamation text-yellow-600"; }
+                }
 
                 return `
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <img src="${doc.imageUrl}" class="w-full h-48 object-cover" alt="Thực phẩm">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <img src="${doc.imageUrl}" class="w-full h-48 object-cover bg-gray-50" alt="Thực phẩm">
                     <div class="p-4">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-bold text-lg text-gray-800">${ai.ten_thuc_pham || 'Không xác định'}</h3>
-                            <span class="text-xs text-gray-500"><i class="far fa-clock"></i> ${timeStr}</span>
+                            <h3 class="font-bold text-gray-800">${ai.ten_thuc_pham || 'Không xác định'}</h3>
+                            <span class="text-xs text-gray-500 flex items-center"><i class="far fa-clock mr-1"></i> ${timeStr}</span>
                         </div>
-                        <div class="inline-flex items-center px-2.5 py-0.5 rounded border text-sm font-medium mb-3 ${badgeClass}">
-                            <i class="fas ${icon} mr-1.5"></i> ${ai.danh_gia || 'Chưa rõ'}
+                        <div class="inline-flex items-center px-2 py-1 rounded border text-xs font-medium mb-2 ${badgeClass}">
+                            <i class="fas ${icon} mr-1.5"></i> ${ai.danh_gia || 'Chưa phân tích'}
                         </div>
-                        <p class="text-sm text-gray-600">${ai.chi_tiet || ''}</p>
+                        ${ai.chi_tiet ? `<p class="text-sm text-gray-600 mt-1">${ai.chi_tiet}</p>` : ''}
                     </div>
                 </div>
                 `;
@@ -376,24 +379,40 @@
         btnStartCamera.addEventListener('click', startCamera);
 
         btnCapture.addEventListener('click', async () => {
+            const useAI = aiToggle.checked;
+            
             try {
+                // Thay đổi UI loading tùy theo chế độ
+                loadingText.innerText = useAI ? "AI Đang phân tích ảnh..." : "Đang lưu ảnh tư liệu...";
                 aiLoadingOverlay.classList.remove('hidden');
                 btnCapture.disabled = true;
 
                 // 1. Chụp & Watermark (Anti-fraud)
                 const base64Image = captureAndWatermark();
                 
-                // 2. Gửi cho AI phân tích
-                const aiResult = await analyzeWithGemini(base64Image);
+                let aiResult = null;
                 
-                // 3. Đẩy lên Firestore (Realtime Dashboard sẽ tự cập nhật)
+                // 2. Tùy chọn xử lý AI
+                if (useAI) {
+                    aiResult = await analyzeWithGemini(base64Image);
+                } else {
+                    // Dữ liệu mock cho ảnh tư liệu thường
+                    aiResult = {
+                        ten_thuc_pham: "Ảnh tư liệu",
+                        danh_gia: "Lưu trữ thủ công",
+                        mau_sac_canh_bao: "gray",
+                        chi_tiet: "Hình ảnh được chụp để làm bằng chứng (không qua AI phân tích)."
+                    };
+                }
+                
+                // 3. Đẩy lên Firestore
                 await saveToFirestore(base64Image, aiResult);
 
                 // Thành công
                 aiLoadingOverlay.classList.add('hidden');
                 btnCapture.disabled = false;
                 
-                // Tự động chuyển qua tab Bảng tin để xem kết quả
+                // Chuyển qua tab Bảng tin
                 window.switchTab('dashboard');
 
             } catch (error) {
@@ -404,7 +423,7 @@
             }
         });
 
-        // Hàm chuyển Tab UI (gắn vào window để gọi từ onclick HTML)
+        // Hàm chuyển Tab UI
         window.switchTab = function(tab) {
             const camSec = document.getElementById('section-camera');
             const dashSec = document.getElementById('section-dashboard');
@@ -421,14 +440,16 @@
                 dashSec.classList.remove('hidden');
                 camTabBtn.className = "flex-1 py-3 text-center tab-inactive transition-colors";
                 dashTabBtn.className = "flex-1 py-3 text-center tab-active transition-colors";
-                // Tắt camera khi sang tab khác để tiết kiệm pin
                 stopCamera();
             }
         };
 
-        // Khởi động Auth ngay khi load
+        // Khởi động Auth
         initAuth();
 
     </script>
 </body>
 </html>
+
+
+```
