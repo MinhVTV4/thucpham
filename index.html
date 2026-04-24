@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -7,21 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Đảm bảo camera cover hết khung hình */
         #video-preview { object-fit: cover; }
         .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .tab-inactive { color: #6b7280; }
-        
-        /* Loading spinner */
         .loader {
             border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #3b82f6;
             width: 24px; height: 24px; animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Ẩn scrollbar cho modal info */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans h-screen flex flex-col">
@@ -53,7 +47,6 @@
         <!-- SECTION: CAMERA & AI -->
         <section id="section-camera" class="h-full flex flex-col p-4">
             
-            <!-- Camera Viewfinder -->
             <div class="relative flex-1 bg-black rounded-xl overflow-hidden shadow-inner mb-4 flex items-center justify-center">
                 <video id="video-preview" class="absolute inset-0 w-full h-full hidden" autoplay playsinline></video>
                 <div id="camera-placeholder" class="text-gray-400 text-center px-4 w-full">
@@ -61,7 +54,6 @@
                     <p>Nhấn "Mở Camera" để bắt đầu</p>
                 </div>
                 
-                <!-- Overlay Loading lúc gửi AI / Lưu -->
                 <div id="ai-loading-overlay" class="absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center hidden z-20">
                     <div class="loader w-12 h-12 mb-3"></div>
                     <p id="loading-text" class="text-white font-semibold">Đang xử lý...</p>
@@ -69,16 +61,12 @@
                 </div>
             </div>
 
-            <!-- Nút điều khiển -->
             <div class="flex flex-col gap-3">
                 <button id="btn-start-camera" class="bg-gray-800 text-white py-3 rounded-lg font-bold shadow-md active:bg-gray-700 transition w-full">
                     <i class="fas fa-video mr-2"></i> Mở Camera
                 </button>
 
-                <!-- Khu vực điều khiển khi bật camera -->
                 <div id="capture-controls" class="hidden flex-col gap-3 w-full">
-                    
-                    <!-- Toggle Switch AI -->
                     <label class="flex items-center justify-between cursor-pointer bg-white p-3 rounded-lg shadow-sm border border-gray-200">
                         <span class="text-sm font-medium text-gray-800"><i class="fas fa-robot text-blue-500 mr-2"></i>Dùng AI phân tích thực phẩm</span>
                         <div class="relative">
@@ -93,12 +81,10 @@
                 </div>
             </div>
 
-            <!-- GPS Info -->
             <div class="mt-3 text-xs text-gray-500 text-center" id="gps-status">
                 <i class="fas fa-location-dot"></i> Đang chờ tín hiệu GPS...
             </div>
             
-            <!-- Ẩn Canvas dùng để xử lý ảnh -->
             <canvas id="capture-canvas" class="hidden"></canvas>
         </section>
 
@@ -106,45 +92,26 @@
         <section id="section-dashboard" class="hidden p-4 min-h-full bg-gray-100">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="font-bold text-gray-700">Lịch sử hôm nay</h2>
-                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded border border-blue-200 flex items-center shadow-sm">
+                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded border border-blue-200 flex items-center">
                     <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse mr-1.5"></div> Live
                 </span>
             </div>
             
-            <!-- Danh sách dạng Grid -->
-            <div id="dashboard-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-10">
-                <div class="text-center text-gray-500 col-span-full py-10">Đang tải dữ liệu...</div>
+            <div id="dashboard-list" class="flex flex-col gap-4 pb-10">
+                <div class="text-center text-gray-500 py-10">Đang tải dữ liệu...</div>
             </div>
         </section>
 
     </main>
 
-    <!-- MODAL XEM ẢNH FULL (Mặc định ẩn) -->
-    <div id="image-modal" class="fixed inset-0 z-[100] hidden bg-black/90 flex flex-col items-center justify-center p-4">
-        <!-- Nút Đóng -->
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 focus:outline-none bg-black/50 w-10 h-10 rounded-full flex items-center justify-center z-50">
-            <i class="fas fa-times text-xl"></i>
-        </button>
-        
-        <!-- Khung chứa ảnh hoàn chỉnh -->
-        <div class="flex-1 w-full flex items-center justify-center overflow-hidden mb-4 mt-8">
-            <img id="modal-img" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" alt="Ảnh chi tiết">
-        </div>
-
-        <!-- Khung chứa thông tin AI -->
-        <div id="modal-info" class="w-full max-w-2xl bg-white rounded-xl p-4 shadow-lg flex-shrink-0 no-scrollbar overflow-y-auto max-h-[30vh]">
-            <!-- Nội dung được sinh bằng JS -->
-        </div>
-    </div>
-
     <!-- Thư viện Firebase & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        // Bổ sung doc, updateDoc để cập nhật dữ liệu lịch sử
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
         import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-ai.js";
 
-        // --- CẤU HÌNH HỆ THỐNG ---
         let firebaseConfig = {
             apiKey: "AIzaSyAtoX3PysX692bNg6nA55Qriv5P-7phmFQ",
             authDomain: "aiminh-d96d4.firebaseapp.com",
@@ -161,27 +128,24 @@
         const db = getFirestore(app);
         let currentUser = null;
 
-        // Lưu cache dữ liệu để truyền vào Modal
-        window.cachedDocs = [];
-
-        // --- KHỞI TẠO AI MODEL ---
+        // --- KHỞI TẠO AI MODEL (Cập nhật phiên bản theo yêu cầu) ---
         let aiModel;
         try {
             const ai = getAI(app, { backend: new GoogleAIBackend() });
             aiModel = getGenerativeModel(ai, { 
-                model: "gemini-2.5-flash",
+                model: "gemini-3.1-flash-lite-preview", // Model đã được cập nhật
                 generationConfig: { responseMimeType: "application/json" }
             });
+            console.log("Firebase AI Model initialized (gemini-3.1-flash-lite-preview)!");
         } catch (e) {
             console.error("Lỗi khởi tạo AI Model:", e);
         }
 
-        // --- BIẾN TOÀN CỤC ---
         let videoStream = null;
         let currentLat = "Chưa rõ";
         let currentLon = "Chưa rõ";
+        let currentDocs = []; // Lưu danh sách docs hiện tại để gọi AI phân tích lại
         
-        // --- UI ELEMENTS ---
         const videoPreview = document.getElementById('video-preview');
         const cameraPlaceholder = document.getElementById('camera-placeholder');
         const btnStartCamera = document.getElementById('btn-start-camera');
@@ -194,7 +158,6 @@
         const gpsStatus = document.getElementById('gps-status');
         const dashboardList = document.getElementById('dashboard-list');
 
-        // --- 1. XÁC THỰC FIREBASE ---
         async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -208,6 +171,7 @@
                 }
             } catch (error) {
                 console.error("Lỗi xác thực:", error);
+                document.getElementById('user-info').innerText = "Lỗi xác thực!";
             }
         }
 
@@ -219,7 +183,6 @@
             }
         });
 
-        // --- 2. CAMERA & GPS LOGIC ---
         async function startCamera() {
             try {
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
@@ -240,15 +203,16 @@
                         gpsStatus.innerHTML = `<i class="fas fa-location-dot text-green-500"></i> GPS: ${currentLat}, ${currentLon}`;
                     },
                     (err) => {
-                        gpsStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-yellow-500"></i> Không lấy được GPS`;
+                        gpsStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-yellow-500"></i> Không lấy được GPS (Dùng mặc định)`;
                     }
                 );
             } catch (err) {
+                console.error(err);
                 cameraPlaceholder.innerHTML = `
                     <div class="bg-red-50 border border-red-200 p-4 rounded-lg text-left">
                         <div class="text-center mb-2"><i class="fas fa-video-slash text-4xl text-red-500"></i></div>
                         <p class="text-red-700 font-bold mb-1">Lỗi truy cập Camera</p>
-                        <p class="text-sm text-red-600 mb-2">Không thể mở máy ảnh. Vui lòng mở bằng trình duyệt gốc (Chrome/Safari) và cấp quyền.</p>
+                        <p class="text-sm text-red-600 mb-2">Không thể mở máy ảnh. Hãy mở bằng trình duyệt gốc (Chrome/Safari).</p>
                     </div>
                 `;
                 btnStartCamera.classList.add('hidden');
@@ -270,7 +234,7 @@
 
         function captureAndWatermark() {
             const ctx = canvas.getContext('2d');
-            const targetWidth = 1000; // Tăng độ phân giải một chút để xem ảnh to cho rõ
+            const targetWidth = 800; 
             const scale = targetWidth / videoPreview.videoWidth;
             canvas.width = targetWidth;
             canvas.height = videoPreview.videoHeight * scale;
@@ -288,30 +252,38 @@
             ctx.font = "14px Arial";
             ctx.fillText(`GPS: ${currentLat}, ${currentLon} | Bếp ăn trường học`, 15, canvas.height - 15);
 
-            return canvas.toDataURL('image/jpeg', 0.8);
+            return canvas.toDataURL('image/jpeg', 0.7);
         }
 
-        // --- 3. GEMINI AI LOGIC ---
+        // --- GEMINI AI LOGIC (Dùng cho cả lúc chụp và lúc phân tích lại) ---
         async function analyzeWithGemini(base64Image) {
-            if (!aiModel) throw new Error("Mô hình AI chưa được khởi tạo.");
+            if (!aiModel) throw new Error("Mô hình AI chưa được khởi tạo. Hãy kiểm tra lại kết nối mạng.");
+
             const base64Data = base64Image.split(',')[1];
+            
             const prompt = `
-                Bạn là chuyên gia an toàn thực phẩm. Nhìn vào ảnh, phân tích và trả về CHỈ MỘT chuỗi JSON:
+                Bạn là chuyên gia an toàn thực phẩm và quản lý dữ liệu. Nhìn vào ảnh, phân tích và trả về CHỈ MỘT chuỗi JSON.
+                Nếu là ảnh thực phẩm, hãy đánh giá độ tươi ngon.
+                Nếu là ảnh tư liệu (văn bản, quang cảnh, hóa đơn, người làm), hãy phân loại và nhận diện nội dung chính.
+                Cấu trúc:
                 {
-                    "ten_thuc_pham": "Tên món/nhóm (VD: Thịt lợn, Rau cải)",
-                    "danh_gia": "Tươi ngon / Bình thường / Nghi ngờ hỏng",
-                    "mau_sac_canh_bao": "green" (tốt) hoặc "yellow" (bình thường) hoặc "red" (hỏng),
-                    "chi_tiet": "Mô tả ngắn 1-2 câu lý do đánh giá"
+                    "ten_thuc_pham": "Tên món/nhóm hoặc Tên loại tư liệu (VD: Thịt lợn, Hóa đơn nhập hàng, Quang cảnh bếp)",
+                    "danh_gia": "Tươi ngon / Bình thường / Nghi ngờ hỏng / Đã ghi nhận tư liệu",
+                    "mau_sac_canh_bao": "green" (tốt/hợp lệ) hoặc "yellow" (bình thường/cần chú ý) hoặc "red" (hỏng/nguy hiểm),
+                    "chi_tiet": "Mô tả ngắn 1-2 câu về nội dung hoặc lý do"
                 }
             `;
+
             const imagePart = { inlineData: { mimeType: "image/jpeg", data: base64Data } };
+
             const result = await aiModel.generateContent([prompt, imagePart]);
-            return JSON.parse(result.response.text());
+            const response = result.response;
+            return JSON.parse(response.text());
         }
 
-        // --- 4. FIREBASE REALTIME SYNC ---
         async function saveToFirestore(base64Image, aiResult) {
             if (!currentUser) return;
+            
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'inspections');
             await addDoc(collectionRef, {
                 imageUrl: base64Image,
@@ -325,27 +297,25 @@
 
         function setupRealtimeListener() {
             if (!currentUser) return;
+            
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'inspections');
             
             onSnapshot(collectionRef, (snapshot) => {
                 const docs = [];
                 snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+                
                 docs.sort((a, b) => b.timestamp - a.timestamp);
-                
-                // Lưu vào cache để modal có thể lấy ra xem
-                window.cachedDocs = docs;
-                
+                currentDocs = docs; // Lưu vào biến toàn cục để dùng khi phân tích lại
                 renderDashboard(docs);
             }, (error) => {
                 console.error("Lỗi Realtime:", error);
-                dashboardList.innerHTML = `<div class="col-span-full text-red-500 text-center p-4">Lỗi kết nối CSDL Realtime.</div>`;
+                dashboardList.innerHTML = `<div class="text-red-500 text-center p-4">Lỗi kết nối CSDL Realtime.</div>`;
             });
         }
 
-        // RENDER GIAO DIỆN LƯỚI THUMBNAIL
         function renderDashboard(docs) {
             if (docs.length === 0) {
-                dashboardList.innerHTML = `<div class="col-span-full text-center text-gray-400 py-12"><i class="fas fa-folder-open text-4xl mb-3"></i><br>Chưa có dữ liệu kiểm duyệt hôm nay.</div>`;
+                dashboardList.innerHTML = `<div class="text-center text-gray-400 py-12"><i class="fas fa-folder-open text-4xl mb-3"></i><br>Chưa có dữ liệu kiểm duyệt hôm nay.</div>`;
                 return;
             }
 
@@ -353,90 +323,82 @@
                 const ai = doc.aiAnalysis || {};
                 const timeStr = new Date(doc.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                 
-                let badgeClass = "bg-gray-100 text-gray-600";
-                let icon = "fa-image";
+                let badgeClass = "bg-gray-100 text-gray-600 border-gray-200";
+                let icon = "fa-image text-gray-500";
                 
                 if (doc.hasAI !== false) {
-                    if (ai.mau_sac_canh_bao === 'green') { badgeClass = "bg-green-500 text-white"; icon = "fa-check"; }
-                    if (ai.mau_sac_canh_bao === 'red') { badgeClass = "bg-red-500 text-white"; icon = "fa-exclamation"; }
-                    if (ai.mau_sac_canh_bao === 'yellow') { badgeClass = "bg-yellow-500 text-white"; icon = "fa-triangle-exclamation"; }
+                    if (ai.mau_sac_canh_bao === 'green') { badgeClass = "bg-green-100 text-green-800 border-green-200"; icon = "fa-check-circle text-green-600"; }
+                    if (ai.mau_sac_canh_bao === 'red') { badgeClass = "bg-red-100 text-red-800 border-red-200"; icon = "fa-triangle-exclamation text-red-600"; }
+                    if (ai.mau_sac_canh_bao === 'yellow') { badgeClass = "bg-yellow-100 text-yellow-800 border-yellow-200"; icon = "fa-circle-exclamation text-yellow-600"; }
                 }
 
-                // Thiết kế Card dạng Lưới vuông
                 return `
-                <div class="bg-white rounded-xl shadow border border-gray-100 overflow-hidden cursor-pointer group hover:shadow-md transition flex flex-col" onclick="openModal('${doc.id}')">
-                    <!-- Thumbnail vuông (aspect-square) -->
-                    <div class="relative w-full aspect-square overflow-hidden bg-gray-100">
-                        <img src="${doc.imageUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" alt="Thực phẩm">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+                    <img src="${doc.imageUrl}" class="w-full h-48 object-cover bg-gray-50" alt="Thực phẩm">
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-gray-800">${ai.ten_thuc_pham || 'Không xác định'}</h3>
+                            <span class="text-xs text-gray-500 flex items-center"><i class="far fa-clock mr-1"></i> ${timeStr}</span>
+                        </div>
+                        <div class="inline-flex items-center px-2 py-1 rounded border text-xs font-medium mb-2 ${badgeClass}">
+                            <i class="fas ${icon} mr-1.5"></i> ${ai.danh_gia || 'Chưa phân tích'}
+                        </div>
+                        ${ai.chi_tiet ? `<p class="text-sm text-gray-600 mt-1 mb-3">${ai.chi_tiet}</p>` : ''}
                         
-                        <!-- Lớp overlay khi hover -->
-                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                            <i class="fas fa-expand text-white text-3xl opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md"></i>
-                        </div>
-
-                        <!-- Huy hiệu trạng thái góc -->
-                        <div class="absolute top-2 right-2 ${badgeClass} w-7 h-7 rounded-full flex items-center justify-center shadow-lg text-xs">
-                            <i class="fas ${icon}"></i>
-                        </div>
-                    </div>
-                    
-                    <!-- Thông tin rút gọn -->
-                    <div class="p-3 flex flex-col justify-between flex-1">
-                        <h3 class="font-bold text-gray-800 text-sm line-clamp-1" title="${ai.ten_thuc_pham || 'Không xác định'}">${ai.ten_thuc_pham || 'Không xác định'}</h3>
-                        <span class="text-[10px] text-gray-500 mt-1"><i class="far fa-clock mr-1"></i>${timeStr}</span>
+                        <!-- Nút phân tích AI dành riêng cho ảnh tư liệu (chưa phân tích) -->
+                        ${doc.hasAI === false ? `
+                            <button data-id="${doc.id}" class="btn-analyze-history w-full mt-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 py-2 rounded text-sm font-medium transition-colors">
+                                <i class="fas fa-robot mr-1"></i> Dùng AI phân tích tư liệu này
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
                 `;
             }).join('');
         }
 
-        // --- 5. LOGIC MODAL (XEM ẢNH FULL) ---
-        window.openModal = function(docId) {
-            // Tìm data trong cache
-            const doc = window.cachedDocs.find(d => d.id === docId);
-            if(!doc) return;
+        // --- XỬ LÝ SỰ KIỆN NÚT PHÂN TÍCH LẠI BẰNG EVENT DELEGATION ---
+        dashboardList.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-analyze-history');
+            if (!btn) return;
+
+            const docId = btn.getAttribute('data-id');
+            const targetDoc = currentDocs.find(d => d.id === docId);
             
-            const ai = doc.aiAnalysis || {};
-            const timeStr = new Date(doc.timestamp).toLocaleString('vi-VN');
-            
-            // Đổ ảnh nguyên bản vào modal
-            document.getElementById('modal-img').src = doc.imageUrl;
-            
-            // Xử lý huy hiệu
-            let badgeClass = "bg-gray-100 text-gray-800 border-gray-300";
-            let icon = "fa-image";
-            if (doc.hasAI !== false) {
-                if (ai.mau_sac_canh_bao === 'green') { badgeClass = "bg-green-100 text-green-800 border-green-300"; icon = "fa-check-circle text-green-600"; }
-                if (ai.mau_sac_canh_bao === 'red') { badgeClass = "bg-red-100 text-red-800 border-red-300"; icon = "fa-triangle-exclamation text-red-600"; }
-                if (ai.mau_sac_canh_bao === 'yellow') { badgeClass = "bg-yellow-100 text-yellow-800 border-yellow-300"; icon = "fa-circle-exclamation text-yellow-600"; }
+            if (!targetDoc || !targetDoc.imageUrl) return;
+
+            try {
+                // UI trạng thái loading trên nút
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang phân tích...`;
+                btn.disabled = true;
+                btn.classList.add('opacity-75');
+
+                // Gọi AI phân tích ảnh
+                const aiResult = await analyzeWithGemini(targetDoc.imageUrl);
+
+                // Cập nhật lại Firestore
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'inspections', docId);
+                await updateDoc(docRef, {
+                    aiAnalysis: aiResult,
+                    hasAI: true // Đánh dấu là đã phân tích
+                });
+
+                // Lưu ý: Không cần cập nhật UI thủ công, onSnapshot sẽ tự động render lại card này!
+            } catch (error) {
+                console.error("Lỗi khi phân tích lại:", error);
+                alert("Lỗi phân tích AI: " + error.message);
+                btn.innerHTML = `<i class="fas fa-robot mr-1"></i> Thử lại`;
+                btn.disabled = false;
+                btn.classList.remove('opacity-75');
             }
+        });
 
-            // Đổ text thông tin xuống Modal Info
-            document.getElementById('modal-info').innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <h2 class="text-lg font-bold text-gray-900">${ai.ten_thuc_pham || 'Không xác định'}</h2>
-                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded"><i class="far fa-clock"></i> ${timeStr}</span>
-                </div>
-                <div class="inline-flex items-center px-2 py-1 rounded border text-sm font-medium mb-3 ${badgeClass}">
-                    <i class="fas ${icon} mr-1.5"></i> ${ai.danh_gia || 'Lưu trữ thủ công'}
-                </div>
-                ${ai.chi_tiet ? `<p class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">${ai.chi_tiet}</p>` : ''}
-            `;
-            
-            // Hiển thị modal
-            document.getElementById('image-modal').classList.remove('hidden');
-        };
-
-        window.closeModal = function() {
-            document.getElementById('image-modal').classList.add('hidden');
-            document.getElementById('modal-img').src = ''; // Clear bộ nhớ
-        };
-
-        // --- 6. SỰ KIỆN NÚT BẤM CHỤP ---
+        // --- SỰ KIỆN NÚT BẤM CAMERA ---
         btnStartCamera.addEventListener('click', startCamera);
 
         btnCapture.addEventListener('click', async () => {
             const useAI = aiToggle.checked;
+            
             try {
                 loadingText.innerText = useAI ? "AI Đang phân tích ảnh..." : "Đang lưu ảnh tư liệu...";
                 aiLoadingOverlay.classList.remove('hidden');
@@ -452,7 +414,7 @@
                         ten_thuc_pham: "Ảnh tư liệu",
                         danh_gia: "Lưu trữ thủ công",
                         mau_sac_canh_bao: "gray",
-                        chi_tiet: "Hình ảnh được chụp để làm bằng chứng (không qua AI phân tích)."
+                        chi_tiet: "Hình ảnh được chụp để làm bằng chứng (chưa qua AI phân tích)."
                     };
                 }
                 
@@ -461,6 +423,7 @@
                 aiLoadingOverlay.classList.add('hidden');
                 btnCapture.disabled = false;
                 window.switchTab('dashboard');
+
             } catch (error) {
                 console.error(error);
                 alert("Có lỗi xảy ra: " + error.message);
@@ -469,7 +432,6 @@
             }
         });
 
-        // Hàm chuyển Tab UI
         window.switchTab = function(tab) {
             const camSec = document.getElementById('section-camera');
             const dashSec = document.getElementById('section-dashboard');
@@ -490,9 +452,11 @@
             }
         };
 
-        // Khởi động Auth
         initAuth();
 
     </script>
 </body>
 </html>
+
+
+```
